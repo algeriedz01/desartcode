@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DesArtCode Store</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:black;
+  color:white;
+}
+.bg-video{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:-1;
+}
+.content{text-align:center;margin-top:50px;}
+h1{font-size:60px;}
+h3{color:#00ffcc;}
+
+.boton3{text-align:center;margin:20px;}
+.boton3 button{
+  padding:10px 20px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+  background:#333;
+  color:white;
+  cursor:pointer;
+}
+
+.box{
+  background:rgba(255,255,255,.95);
+  max-width:1300px;
+  margin:40px auto;
+  padding:20px;
+  border-radius:20px;
+  max-height:600px;
+  overflow-y:auto;
+}
+
+#products{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+
+.product{
+  background:white;
+  color:black;
+  border-radius:10px;
+  padding:10px;
+  text-align:center;
+}
+.product img{
+  width:100%;
+  border-radius:10px;
+}
+.fromeach{
+  margin-top:10px;
+  padding:8px 15px;
+  background:black;
+  color:white;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+/* BOX الشراء */
+.buy-box{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  z-index:999;
+  justify-content:center;
+  align-items:center;
+}
+.buy-content{
+  background:white;
+  color:black;
+  width:400px;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  position:relative;
+}
+.buy-content img{width:100%;border-radius:10px;}
+.buy-content input{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+}
+.close{
+  position:absolute;
+  top:10px;
+  right:15px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<video class="bg-video" autoplay muted loop>
+  <source src="13495-248644905.mp4" type="video/mp4">
+</video>
+
+<div class="content">
+  <h1>DesArtCode Store</h1>
+  <h3>HTML • CSS • JS Templates</h3>
+</div>
+
+<div class="boton3">
+  <a href="site.html"><button onclick="scrollTo(0,0)">Home</button></a>
+  <button onclick="document.querySelector('.box').scrollIntoView({behavior:'smooth'})">Store</button>
+</div>
+
+<div class="box">
+  <div id="products"></div>
+</div>
+
+<!-- BOX الشراء -->
+<div id="buyBox" class="buy-box">
+  <div class="buy-content">
+    <span class="close" onclick="closeBox()">✖</span>
+
+    <img id="buyImage">
+    <h3 id="buyTitle"></h3>
+    <p id="buyPrice"></p>
+
+    <input id="inputName" placeholder="الاسم">
+    <input id="inputLastname" placeholder="اللقب">
+    <input id="inputPhone" placeholder="رقم الهاتف">
+    <input id="productCode" readonly>
+
+    <button class="fromeach" onclick="sendToTelegram()">إرسال الطلب</button>
+  </div>
+</div>
+
+<script>
+const BOT_TOKEN = "8239906332:AAFFVmsSQyE31fs2tvPdtMKW3GmfO7dXnXA"; // ضع توكن البوت هنا
+const CHAT_ID   = "6446210491";   // ضع ID الشات هنا
+
+// جلب المنتجات
+fetch("products.json")
+.then(r=>r.json())
+.then(data=>{
+  const p=document.getElementById("products");
+  data.forEach(item=>{
+    const div=document.createElement("div");
+    div.className="product";
+    div.innerHTML=`
+      <img src="${item.image}">
+      <h3>${item.name}</h3>
+      <p>${item.price} دج</p>
+      <small>Code: ${item.code}</small>
+      <button class="fromeach"
+        onclick="openBox(
+          '${item.image}',
+          '${item.name}',
+          '${item.price}',
+          '${item.code}'
+        )">شراء</button>
+    `;
+    p.appendChild(div);
+  });
+});
+
+// فتح Box الشراء
+function openBox(img,name,price,code){
+  document.getElementById("buyImage").src=img;
+  document.getElementById("buyTitle").innerText=name;
+  document.getElementById("buyPrice").innerText=price+" دج";
+  document.getElementById("productCode").value=code;
+  document.getElementById("buyBox").style.display="flex";
+}
+
+// غلق Box
+function closeBox(){
+  document.getElementById("buyBox").style.display="none";
+}
+
+// إرسال البيانات إلى تيليغرام
+function sendToTelegram(){
+  const userName = document.getElementById("inputName").value;
+  const userLastname = document.getElementById("inputLastname").value;
+  const userPhone = document.getElementById("inputPhone").value;
+  const code = document.getElementById("productCode").value;
+
+  if(!userName || !userLastname || !userPhone){
+    alert("املأ جميع الحقول");
+    return;
+  }
+
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      chat_id: CHAT_ID,
+      text:
+`🛒 طلب شراء
+👤 ${userName} ${userLastname}
+📞 ${userPhone}
+📦 كود المنتج: ${code}`
+    })
+  }).then(()=>{
+    alert("  تم الإرسال  سيتم الرد  قريبا  و شكرا✅");
+    closeBox();
+  });
+}
+</script>
+
+</body>
+</html>
